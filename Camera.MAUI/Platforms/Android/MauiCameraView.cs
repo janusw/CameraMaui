@@ -63,9 +63,9 @@ internal class MauiCameraView: GridLayout
         stateListener = new MyCameraStateCallback(this);
         photoListener = new ImageAvailableListener(this);
         AddView(textureView);
-        ORIENTATIONS.Append((int)SurfaceOrientation.Rotation0, 90);
+        ORIENTATIONS.Append((int)SurfaceOrientation.Rotation0, 270);
         ORIENTATIONS.Append((int)SurfaceOrientation.Rotation90, 0);
-        ORIENTATIONS.Append((int)SurfaceOrientation.Rotation180, 270);
+        ORIENTATIONS.Append((int)SurfaceOrientation.Rotation180, 90);
         ORIENTATIONS.Append((int)SurfaceOrientation.Rotation270, 180);
         InitDevices();
     }
@@ -177,9 +177,13 @@ internal class MauiCameraView: GridLayout
                         mediaRecorder.SetVideoEncoder(VideoEncoder.H264);
                         mediaRecorder.SetAudioEncoder(AudioEncoder.Aac);
                         IWindowManager windowManager = context.GetSystemService(Context.WindowService).JavaCast<IWindowManager>();
+
+                        // Below is making the camera upside down.....in recording...
                         int rotation = (int)windowManager.DefaultDisplay.Rotation;
                         int orientation = ORIENTATIONS.Get(rotation);
                         mediaRecorder.SetOrientationHint(orientation);
+                        
+                        
                         mediaRecorder.Prepare();
 
                         if (OperatingSystem.IsAndroidVersionAtLeast(28))
@@ -188,8 +192,10 @@ internal class MauiCameraView: GridLayout
                             cameraManager.OpenCamera(cameraView.Camera.DeviceId, stateListener, null);
                         started = true;
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        Console.Write(ex.ToString());
+                        Console.Write(ex.StackTrace);
                         result = CameraResult.AccessError;
                     }
                 }

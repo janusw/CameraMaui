@@ -608,7 +608,17 @@ public class CameraView : View, ICameraView
             if (status != PermissionStatus.Granted)
             {
                 status = await Permissions.RequestAsync<Permissions.StorageWrite>();
-                if (status != PermissionStatus.Granted) return false;
+                if (status != PermissionStatus.Granted)
+                {
+                    status = await Permissions.CheckStatusAsync<Permissions.Media>();
+                    if (status != PermissionStatus.Granted)
+                    {
+                        PermissionStatus status1 = await Permissions.RequestAsync<Permissions.Media>();
+                        if (status1 != PermissionStatus.Granted) return false;
+                    }
+
+
+                }
             }
         }
         return true;
