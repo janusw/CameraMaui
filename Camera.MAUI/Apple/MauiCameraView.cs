@@ -152,6 +152,11 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
 
                         //Below was causing issues on .net 8
                         //if (!File.Exists(file)) File.Create(file).Close();
+
+                        if (File.Exists(file))
+                        {
+                            File.Delete(file);
+                        }
                         
                         recordOutput.StartRecordingToOutputFile(NSUrl.FromFilename(file), this);
                         UpdateMirroredImage();

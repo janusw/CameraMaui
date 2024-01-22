@@ -42,6 +42,7 @@ internal class MauiCameraView: GridLayout
     private AudioManager audioManager;
     private readonly System.Timers.Timer timer;
     private readonly SparseIntArray ORIENTATIONS = new();
+    private readonly SparseIntArray ORIENTATIONSFRONT = new();
     private CameraCharacteristics camChars;
     private PreviewCaptureStateCallback sessionCallback;
     private byte[] capturePhoto = null;
@@ -63,10 +64,16 @@ internal class MauiCameraView: GridLayout
         stateListener = new MyCameraStateCallback(this);
         photoListener = new ImageAvailableListener(this);
         AddView(textureView);
-        ORIENTATIONS.Append((int)SurfaceOrientation.Rotation0, 270);
+        ORIENTATIONS.Append((int)SurfaceOrientation.Rotation0, 90);
         ORIENTATIONS.Append((int)SurfaceOrientation.Rotation90, 0);
-        ORIENTATIONS.Append((int)SurfaceOrientation.Rotation180, 90);
+        ORIENTATIONS.Append((int)SurfaceOrientation.Rotation180, 270);
         ORIENTATIONS.Append((int)SurfaceOrientation.Rotation270, 180);
+
+        ORIENTATIONSFRONT.Append((int)SurfaceOrientation.Rotation0, 270);
+        ORIENTATIONSFRONT.Append((int)SurfaceOrientation.Rotation90, 0);
+        ORIENTATIONSFRONT.Append((int)SurfaceOrientation.Rotation180, 90);
+        ORIENTATIONSFRONT.Append((int)SurfaceOrientation.Rotation270, 180);
+
         InitDevices();
     }
 
@@ -157,6 +164,11 @@ internal class MauiCameraView: GridLayout
                         videoSize = ChooseVideoSize(map.GetOutputSizes(Class.FromType(typeof(ImageReader))));
                         recording = true;
 
+                        if (File.Exists(file))
+                        {
+                            File.Delete(file);
+                        }
+
                         if (OperatingSystem.IsAndroidVersionAtLeast(31))
                             mediaRecorder = new MediaRecorder(context);
                         else
@@ -180,8 +192,15 @@ internal class MauiCameraView: GridLayout
 
                         // Below is making the camera upside down.....in recording...
                         int rotation = (int)windowManager.DefaultDisplay.Rotation;
-                        int orientation = ORIENTATIONS.Get(rotation);
+                        int orientation = 0;
+                        if (cameraView.Camera.Position == CameraPosition.Back)
+                            orientation = ORIENTATIONS.Get(rotation);
+                        else
+                            orientation = ORIENTATIONSFRONT.Get(rotation);
+
                         mediaRecorder.SetOrientationHint(orientation);
+
+                        Console.WriteLine($"Rotation: {rotation} Orientation: {orientation}");
                         
                         
                         mediaRecorder.Prepare();
