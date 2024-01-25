@@ -190,9 +190,10 @@ internal class MauiCameraView: GridLayout
                         mediaRecorder.SetAudioEncoder(AudioEncoder.Aac);
                         IWindowManager windowManager = context.GetSystemService(Context.WindowService).JavaCast<IWindowManager>();
 
-                        // Below is making the camera upside down.....in recording...
                         int rotation = (int)windowManager.DefaultDisplay.Rotation;
                         int orientation = 0;
+                        
+                        // Set camera rotation based on front or back camera.
                         if (cameraView.Camera.Position == CameraPosition.Back)
                             orientation = ORIENTATIONS.Get(rotation);
                         else
