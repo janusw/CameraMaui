@@ -467,7 +467,7 @@ public class CameraView : View, ICameraView
     /// <paramref name="file"/> Full path to file where video will be stored. On Android, the following formats are supported: .3gp, .mp4 and .webm.
     /// <paramref name="Resolution"/> Sets the Video Resolution. It must be in Camera.AvailableResolutions. If width or height is 0, max resolution will be taken.
     /// <paramref name="frameRate"/> Desired frame rate of the recording in Hz (default: 30). Only supported on Android.
-    /// <paramref name="bitRate"/> Desired bitrate of the recording in bps (default: 10M). Only supported on Android.
+    /// <paramref name="bitRate"/> Desired bitrate of the recording in bps (default: 10M). Supported on: Android, iOS, MacOS.
     /// </summary>
     public async Task<CameraResult> StartRecordingAsync(string file, Size Resolution = default, int frameRate = 30, int bitRate = 10000000)
     {

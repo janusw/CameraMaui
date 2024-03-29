@@ -148,6 +148,9 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
 
                         var movieFileOutputConnection = recordOutput.Connections[0];
                         movieFileOutputConnection.VideoOrientation = (AVCaptureVideoOrientation)UIDevice.CurrentDevice.Orientation;
+                        var compressionSettings = new NSDictionary(AVVideo.AverageBitRateKey, bitRate);
+                        var outputSettings = new NSDictionary(AVVideo.CompressionPropertiesKey, compressionSettings);
+                        recordOutput.SetOutputSettings(outputSettings, movieFileOutputConnection);
                         captureSession.StartRunning();
 
                         //Below was causing issues on .net 8
