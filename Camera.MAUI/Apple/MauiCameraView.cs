@@ -135,6 +135,8 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
                         };
                         frames = 0;
                         captureDevice = camDevices.First(d => d.UniqueID == cameraView.Camera.DeviceId);
+                        captureDevice.ActiveVideoMaxFrameDuration = new CMTime(1, frameRate);
+                        captureDevice.ActiveVideoMinFrameDuration = new CMTime(1, frameRate);
                         ForceAutoFocus();
                         captureInput = new AVCaptureDeviceInput(captureDevice, out var err);
                         captureSession.AddInput(captureInput);
