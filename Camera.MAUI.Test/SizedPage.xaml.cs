@@ -85,9 +85,9 @@ public partial class SizedPage : ContentPage
                 cameraView.Camera = camera;
             //cameraView.Microphone = micro;
 #if IOS
-            var result = await cameraView.StartRecordingAsync(Path.Combine(FileSystem.Current.CacheDirectory, "Video.mov"));
+            var result = await cameraView.StartRecordingAsync(Path.Combine(FileSystem.Current.AppDataDirectory, "Video.mov"));
 #else
-            var result = await cameraView.StartRecordingAsync(Path.Combine(FileSystem.Current.CacheDirectory, "Video.mp4"), new Size(1280, 720));
+            var result = await cameraView.StartRecordingAsync(Path.Combine(FileSystem.Current.AppDataDirectory, "Video.mp4"), new Size(1280, 720));
 #endif
             Debug.WriteLine("Start recording result " + result);
             //}
@@ -102,9 +102,9 @@ public partial class SizedPage : ContentPage
         var result = await cameraView.StopRecordingAsync();
         Debug.WriteLine("Stop recording result " + result);
 #if IOS
-        player.Source = MediaSource.FromFile(Path.Combine(FileSystem.Current.CacheDirectory, "Video.mov"));
+        player.Source = MediaSource.FromFile(Path.Combine(FileSystem.Current.AppDataDirectory, "Video.mov"));
 #else
-        player.Source = MediaSource.FromFile(Path.Combine(FileSystem.Current.CacheDirectory, "Video.mp4"));
+        player.Source = MediaSource.FromFile(Path.Combine(FileSystem.Current.AppDataDirectory, "Video.mp4"));
 #endif
     }
     private async void OnStopClicked(object sender, EventArgs e)
