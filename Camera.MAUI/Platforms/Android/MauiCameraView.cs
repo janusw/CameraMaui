@@ -584,6 +584,30 @@ internal class MauiCameraView: GridLayout
         }
         return stream;
     }
+
+    internal System.IO.Stream GetSnapShotStream(ImageFormat imageFormat)
+    {
+        MemoryStream stream = new();
+        if (started && !snapping)
+        {
+            snapping = true;
+            Bitmap bitmap = TakeSnap();
+
+            if (bitmap != null)
+            {
+                var iformat = imageFormat switch
+                {
+                    ImageFormat.JPEG => Bitmap.CompressFormat.Jpeg,
+                    _ => Bitmap.CompressFormat.Png
+                };
+                bitmap.Compress(iformat, 100, stream);
+                stream.Position = 0;
+            }
+            snapping = false;
+        }
+        return stream;
+    }
+
     internal ImageSource GetSnapShot(ImageFormat imageFormat, bool auto = false)
     {
         ImageSource result = null;

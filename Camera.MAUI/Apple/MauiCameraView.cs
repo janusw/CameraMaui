@@ -371,6 +371,54 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
             return stream;
         }
     }
+    
+    public Stream GetSnapShotStream(ImageFormat imageFormat)
+    {
+        MemoryStream stream = new();
+
+        if (started && lastCapture != null && !snapping)
+        {
+            MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                snapping = true;
+                try
+                {
+                    lock (lockCapture)
+                    {
+                        var ciContext = new CIContext();
+                        CGImage cgImage = ciContext.CreateCGImage(lastCapture, lastCapture.Extent);
+                        UIImageOrientation orientation = UIDevice.CurrentDevice.Orientation switch
+                        {
+                            UIDeviceOrientation.LandscapeRight => UIImageOrientation.Down,
+                            UIDeviceOrientation.LandscapeLeft => UIImageOrientation.Up,
+                            UIDeviceOrientation.PortraitUpsideDown => UIImageOrientation.Left,
+                            _ => UIImageOrientation.Right
+                        };
+                        var image = UIImage.FromImage(cgImage, UIScreen.MainScreen.Scale, orientation);
+                        var image2 = CropImage(image);
+                        //MemoryStream stream = new();
+                        switch (imageFormat)
+                        {
+                            case ImageFormat.JPEG:
+                                image2.AsJPEG().AsStream().CopyTo(stream);
+                                break;
+                            default:
+                                image2.AsPNG().AsStream().CopyTo(stream);
+                                break;
+                        }
+                        stream.Position = 0;
+                       
+                    }
+                }
+                catch
+                {
+                }
+                snapping = false;
+            }).Wait();
+        }
+
+        return stream;
+    }
     public ImageSource GetSnapShot(ImageFormat imageFormat, bool auto = false)
     {
         ImageSource result = null;

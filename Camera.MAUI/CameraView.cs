@@ -537,6 +537,18 @@ public class CameraView : View, ICameraView
     /// Takes a capture form the active camera playback.
     /// </summary>
     /// <param name="imageFormat">The capture image format</param>
+    public Stream GetSnapShotStream(ImageFormat imageFormat = ImageFormat.PNG)
+    {
+        if (Handler != null && Handler is CameraViewHandler handler)
+        {
+            SnapShotStream = handler.GetSnapShotStream(imageFormat);
+        }
+        return SnapShotStream;
+    }
+    /// <summary>
+    /// Takes a capture form the active camera playback.
+    /// </summary>
+    /// <param name="imageFormat">The capture image format</param>
     public ImageSource GetSnapShot(ImageFormat imageFormat = ImageFormat.PNG)
     {
         if (Handler != null && Handler is CameraViewHandler handler)

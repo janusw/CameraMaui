@@ -511,6 +511,45 @@ public sealed partial class MauiCameraView : UserControl, IDisposable
         GC.Collect();
         return null;
     }
+    internal Stream GetSnapShotStream(ImageFormat imageFormat)
+    {
+        MemoryStream stream = new();
+        if (started && !snapping && frameReader != null)
+        {
+            snapping = true;
+            SoftwareBitmap snapshot = null;
+
+            var frame = frameReader.TryAcquireLatestFrame();
+            if (frame != null && frame.VideoMediaFrame != null)
+            {
+                snapshot = frame.VideoMediaFrame.SoftwareBitmap;
+            }
+            if (snapshot != null)
+            {
+                var iformat = imageFormat switch
+                {
+                    ImageFormat.JPEG => BitmapEncoder.JpegEncoderId,
+                    _ => BitmapEncoder.PngEncoderId
+                };
+                BitmapEncoder encoder = BitmapEncoder.CreateAsync(iformat, stream.AsRandomAccessStream()).GetAwaiter().GetResult();
+                var img = SoftwareBitmap.Convert(snapshot, BitmapPixelFormat.Rgba8, BitmapAlphaMode.Premultiplied);
+                encoder.SetSoftwareBitmap(img);
+                try
+                {
+                    if (flowDirection == Microsoft.UI.Xaml.FlowDirection.RightToLeft)
+                        encoder.BitmapTransform.Flip = BitmapFlip.Horizontal;
+                    encoder.FlushAsync().GetAwaiter().GetResult();
+                    stream.Position = 0;
+                }
+                catch (Exception)
+                { }
+            }
+            snapping = false;
+        }
+        GC.Collect();
+        return stream;
+    }
+
     internal ImageSource GetSnapShot(ImageFormat imageFormat, bool auto = false)
     {
         ImageSource result = null;
