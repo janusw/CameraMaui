@@ -585,27 +585,35 @@ internal class MauiCameraView: GridLayout
         return stream;
     }
 
-    internal System.IO.Stream GetSnapShotStream(ImageFormat imageFormat)
+    private MemoryStream ReadSnapShotStream(ImageFormat imageFormat)
     {
         MemoryStream stream = new();
+        Bitmap bitmap = TakeSnap();
+
+        if (bitmap != null)
+        {
+            var iformat = imageFormat switch
+            {
+                ImageFormat.JPEG => Bitmap.CompressFormat.Jpeg,
+                _ => Bitmap.CompressFormat.Png
+            };
+            bitmap.Compress(iformat, 100, stream);
+            stream.Position = 0;
+            bitmap.Dispose();
+        }
+        return stream;
+    }
+
+    internal System.IO.Stream GetSnapShotStream(ImageFormat imageFormat)
+    {
+        MemoryStream stream = null;
         if (started && !snapping)
         {
             snapping = true;
-            Bitmap bitmap = TakeSnap();
-
-            if (bitmap != null)
-            {
-                var iformat = imageFormat switch
-                {
-                    ImageFormat.JPEG => Bitmap.CompressFormat.Jpeg,
-                    _ => Bitmap.CompressFormat.Png
-                };
-                bitmap.Compress(iformat, 100, stream);
-                stream.Position = 0;
-            }
+            stream = ReadSnapShotStream(imageFormat);
             snapping = false;
         }
-        return stream;
+        return stream; 
     }
 
     internal ImageSource GetSnapShot(ImageFormat imageFormat, bool auto = false)
@@ -615,18 +623,10 @@ internal class MauiCameraView: GridLayout
         if (started && !snapping)
         {
             snapping = true;
-            Bitmap bitmap = TakeSnap();
+            var stream = ReadSnapShotStream(imageFormat);
 
-            if (bitmap != null)
+            if (stream != null && stream.CanRead)
             {
-                var iformat = imageFormat switch
-                {
-                    ImageFormat.JPEG => Bitmap.CompressFormat.Jpeg,
-                    _ => Bitmap.CompressFormat.Png
-                };
-                MemoryStream stream = new();
-                bitmap.Compress(iformat, 100, stream);
-                stream.Position = 0;
                 if (auto)
                 {
                     if (cameraView.AutoSnapShotAsImageSource)
@@ -636,7 +636,6 @@ internal class MauiCameraView: GridLayout
                 }
                 else
                     result = ImageSource.FromStream(() => stream);
-                bitmap.Dispose();
             }
             snapping = false;
         }
