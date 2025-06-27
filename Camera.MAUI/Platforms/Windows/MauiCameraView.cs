@@ -511,7 +511,7 @@ public sealed partial class MauiCameraView : UserControl, IDisposable
         GC.Collect();
         return null;
     }
-    private MemoryStream ReadSnapShot(ImageFormat imageFormat)
+    private MemoryStream ReadSnapShotStream(ImageFormat imageFormat)
     {
         MemoryStream stream = new();
         if (frameReader != null)
@@ -556,7 +556,7 @@ public sealed partial class MauiCameraView : UserControl, IDisposable
         if (started && !snapping)
         {
             snapping = true;
-            stream = ReadSnapShot(imageFormat);
+            stream = ReadSnapShotStream(imageFormat);
             snapping = false;
         }
         GC.Collect();
@@ -570,7 +570,7 @@ public sealed partial class MauiCameraView : UserControl, IDisposable
         {
             snapping = true;
 
-            var stream = ReadSnapShot(imageFormat);
+            var stream = ReadSnapShotStream(imageFormat);
 
             if (auto)
             {
