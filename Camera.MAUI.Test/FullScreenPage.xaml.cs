@@ -13,7 +13,7 @@ public partial class FullScreenPage : ContentPage
         if (cameraView.Cameras.Count > 0)
         {
             cameraView.Camera = cameraView.Cameras.First();
-            /*
+            
             MainThread.BeginInvokeOnMainThread(async () =>
             {
                 if (await cameraView.StartCameraAsync() == CameraResult.Success)
@@ -22,7 +22,7 @@ public partial class FullScreenPage : ContentPage
                     playing = true;
                 }
             });
-            */
+            
         }
     }
     private async void Button_Clicked(object sender, EventArgs e)
