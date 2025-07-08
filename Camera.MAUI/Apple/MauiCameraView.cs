@@ -44,7 +44,7 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
         this.cameraView = cameraView;
 
         captureSession = new AVCaptureSession
-        {   
+        {
             SessionPreset = AVCaptureSession.PresetPhoto
         };
         PreviewLayer = new(captureSession)
@@ -188,6 +188,7 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
 
     public async Task<CameraResult> StartCameraAsync(Size PhotosResolution)
     {
+        LayoutSubviews();
         CameraResult result = CameraResult.Success;
         if (initiated)
         {
