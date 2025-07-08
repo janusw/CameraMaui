@@ -75,7 +75,12 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
         {
             try
             {
-                var deviceDescoverySession = AVCaptureDeviceDiscoverySession.Create(new AVCaptureDeviceType[] { AVCaptureDeviceType.BuiltInWideAngleCamera, AVCaptureDeviceType.BuiltInUltraWideCamera, AVCaptureDeviceType.BuiltInDualWideCamera, AVCaptureDeviceType.BuiltInTripleCamera, AVCaptureDeviceType.BuiltInTelephotoCamera }, AVMediaTypes.Video, AVCaptureDevicePosition.Unspecified);
+                AVCaptureDeviceType[] deviceTypes = null;
+                if (OperatingSystem.IsIOSVersionAtLeast(13))
+                    deviceTypes = new AVCaptureDeviceType[] { AVCaptureDeviceType.BuiltInWideAngleCamera, AVCaptureDeviceType.BuiltInUltraWideCamera, AVCaptureDeviceType.BuiltInDualWideCamera, AVCaptureDeviceType.BuiltInTripleCamera, AVCaptureDeviceType.BuiltInTelephotoCamera };
+                else
+                    deviceTypes = new AVCaptureDeviceType[] { AVCaptureDeviceType.BuiltInWideAngleCamera, AVCaptureDeviceType.BuiltInTelephotoCamera };
+                var deviceDescoverySession = AVCaptureDeviceDiscoverySession.Create(deviceTypes, AVMediaTypes.Video, AVCaptureDevicePosition.Unspecified);
                 camDevices = deviceDescoverySession.Devices;
                 cameraView.Cameras.Clear();
                 foreach (var device in camDevices)
