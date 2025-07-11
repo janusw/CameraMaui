@@ -385,7 +385,6 @@ internal class MauiCameraView : GridLayout
 
                 mediaRecorder?.Stop();
                 previewSession?.StopRepeating();
-                previewSession?.AbortCaptures();
                 cameraDevice?.Close();
 
                 void CleanUp(object sender, EventArgs args)
@@ -414,6 +413,7 @@ internal class MauiCameraView : GridLayout
                     }
                 }
             }
+            catch { }
         }
         else
             result = CameraResult.NotInitiated;
