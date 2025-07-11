@@ -381,38 +381,39 @@ internal class MauiCameraView : GridLayout
             timer.Stop();
             try
             {
+                stateListener.OnCameraClosed += CleanUp;
+
                 mediaRecorder?.Stop();
-                mediaRecorder?.Dispose();
-            }
-            catch { }
-            try
-            {
-                backgroundThread?.QuitSafely();
-                backgroundThread?.Join();
-                backgroundThread = null;
-                backgroundHandler = null;
-                imgReader?.Dispose();
-                imgReader = null;
-            }
-            catch { }
-            try
-            {
                 previewSession?.StopRepeating();
-                previewSession?.Dispose();
-            }
-            catch { }
-            try
-            {
+                previewSession?.AbortCaptures();
                 cameraDevice?.Close();
-                cameraDevice?.Dispose();
+
+                void CleanUp(object sender, EventArgs args)
+                {
+                    try
+                    {
+                        mediaRecorder?.Dispose();
+                        previewSession?.Dispose();
+                        cameraDevice?.Dispose();
+                        imgReader?.Dispose();
+                        backgroundThread?.QuitSafely();
+                        backgroundThread?.Join();
+                    }
+                    finally
+                    {
+                        backgroundThread = null;
+                        backgroundHandler = null;
+                        imgReader = null;
+                        previewSession = null;
+                        cameraDevice = null;
+                        previewBuilder = null;
+                        mediaRecorder = null;
+                        started = false;
+                        recording = false;
+                        stateListener.OnCameraClosed -= CleanUp;
+                    }
+                }
             }
-            catch { }
-            previewSession = null;
-            cameraDevice = null;
-            previewBuilder = null;
-            mediaRecorder = null;
-            started = false;
-            recording = false;
         }
         else
             result = CameraResult.NotInitiated;
@@ -428,9 +429,11 @@ internal class MauiCameraView : GridLayout
             RemoveAllViews();
             textureView?.Dispose();
             timer?.Dispose();
+        }
+        finally
+        {
             Dispose();
         }
-        catch { }
     }
     private void ProccessQR()
     {
@@ -909,10 +912,13 @@ internal class MauiCameraView : GridLayout
     private class MyCameraStateCallback : CameraDevice.StateCallback
     {
         private readonly MauiCameraView cameraView;
+        public EventHandler OnCameraClosed;
+
         public MyCameraStateCallback(MauiCameraView camView)
         {
             cameraView = camView;
         }
+
         public override void OnOpened(CameraDevice camera)
         {
             if (camera != null)
@@ -932,6 +938,11 @@ internal class MauiCameraView : GridLayout
         {
             camera?.Close();
             cameraView.cameraDevice = null;
+        }
+
+        public override void OnClosed(CameraDevice camera)
+        {
+            OnCameraClosed?.Invoke(this, EventArgs.Empty);
         }
     }
 
