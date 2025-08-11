@@ -66,9 +66,17 @@
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 
-	<ItemGroup>
+	<ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
+		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.70" />
+		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.70" />
+	</ItemGroup>
+
+	<ItemGroup Condition="!$(TargetFramework.Contains('-windows'))">
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Maui" Version="11.2.0" />
 		<PackageReference Include="CommunityToolkit.Maui.MediaElement" Version="6.1.0-mediaelement" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.3" />
