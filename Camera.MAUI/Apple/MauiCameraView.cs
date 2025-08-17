@@ -602,17 +602,11 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
             sampleBuffer?.Dispose();
         }
     }
-    [Export("captureOutput:didFinishProcessingPhotoSampleBuffer:previewPhotoSampleBuffer:resolvedSettings:bracketSettings:error:")]
-    void DidFinishProcessingPhoto(AVCapturePhotoOutput captureOutput, CMSampleBuffer photoSampleBuffer, CMSampleBuffer previewPhotoSampleBuffer, AVCaptureResolvedPhotoSettings resolvedSettings, AVCaptureBracketedStillImageSettings bracketSettings, NSError error)
-    {
-        if (photoSampleBuffer == null)
-        {
-            photoError = true;
-            return;
-        }
 
-        NSData imageData = AVCapturePhotoOutput.GetJpegPhotoDataRepresentation(photoSampleBuffer, previewPhotoSampleBuffer);
-        photo = new UIImage(imageData);
+    [Export("captureOutput:didFinishProcessingPhoto:error:")]
+    void DidFinishProcessingPhoto(AVCapturePhotoOutput output, AVCapturePhoto capPhoto, NSError error)
+    {
+        photo = new UIImage(capPhoto.FileDataRepresentation);
         photoTaken = true;
     }
 
