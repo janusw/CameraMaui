@@ -29,7 +29,9 @@ jobs:
         distribution: 'temurin'
         java-version: '11'
     - name: Restore dependencies
-      run: dotnet restore
+      run: |
+        dotnet --version
+        dotnet restore
     - name: Build Lib
       run: dotnet build Camera.MAUI/Camera.MAUI.csproj --no-restore -c Release -p:Version=$(git describe --tags)
     - name: Upload package
