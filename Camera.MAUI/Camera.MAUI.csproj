@@ -69,4 +69,15 @@
 	  </MauiXaml>
 	</ItemGroup>
 
+  <!-- Make sure any old temp files are removed-->
+  <Target Name="CustomClean" AfterTargets="Clean" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <Message Text="Running custom clean up bin... $(ProjectDir)bin" />
+    <Exec Command="rmdir /s /q $(ProjectDir)bin" />
+    <Message Text="Running custom clean up obj... $(ProjectDir)obj" />
+    <Exec Command="rmdir /s /q $(ProjectDir)obj" />
+  </Target>
+  <Target Name="CustomCleanNix" AfterTargets="Clean" Condition="$([MSBuild]::IsOSPlatform('OSX')) or $([MSBuild]::IsOSPlatform('Linux'))">
+    <Message Text="Running custom clean up ... $(ProjectDir)" />
+    <Exec Command="rm -R $(ProjectDir)bin $(ProjectDir)obj" ContinueOnError="true" />
+  </Target>
 </Project>
