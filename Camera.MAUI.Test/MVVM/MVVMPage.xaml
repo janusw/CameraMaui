@@ -59,6 +59,8 @@
                 <Label Text="{Binding BarcodeText}" TextColor="Black" FontAttributes="Bold" HorizontalOptions="Center" />
                 <Image BindingContext="{x:Reference cameraView}" x:DataType="cv:CameraView" Source="{Binding SnapShot}" Aspect="AspectFit" WidthRequest="250" HeightRequest="100" HorizontalOptions="Center" />
                 <toolkit:MediaElement Source="{Binding VideoSource}" ShouldAutoPlay="False" ShouldShowPlaybackControls="True" HeightRequest="300" WidthRequest="200" />
+                <!--so we can save the video file for offload-->
+                <Button Text="Save Video" Command="{Binding SaveVideo}"/>
             </VerticalStackLayout>
         </Grid>
     </ScrollView>
