@@ -2,12 +2,11 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Runtime.CompilerServices;
-//using CommunityToolkit.Mvvm.Input;
 
 using Debug = System.Diagnostics.Debug;
 namespace Camera.MAUI;
 
-public class CameraService : CommunityToolkit.Mvvm.ComponentModel.ObservableObject//, ICameraService 
+public class CameraService : Internals.ObservableBase
 {
     public string RawOrientation
     {
@@ -35,8 +34,7 @@ public class CameraService : CommunityToolkit.Mvvm.ComponentModel.ObservableObje
         float y = Acceleration.Y;
         float x = Acceleration.X;
 
-        //**todo: Android-specific?
-        //**todo: move this to after we get the update from accelerometer, so that this can be subscribed to?
+        //**todo: Android-specific here, so we should... do what?
         // Correct 0° reference: add 90° so 0° matches the phone's native orientation
         double angle = Math.Atan2(-x, y) * (180.0 / Math.PI) + 90.0;
         if (angle < 0) angle += 360;
@@ -80,8 +78,8 @@ public class CameraService : CommunityToolkit.Mvvm.ComponentModel.ObservableObje
         {
             Acceleration = e.Reading.Acceleration;
             RawOrientation = e.Reading.Acceleration.ToString();
-            //**todo: calc the new orientation here so that app-code can subscribe to it only when it changes/databind
             Debug.WriteLine($"Device accel: {RawOrientation}");
+            //calc the new orientation here so that app-code can subscribe to it only when it changes/databind
             DeviceOrientationAngle = ComputeDeviceOrientation();
         }
 
