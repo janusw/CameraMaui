@@ -17,6 +17,7 @@ using Android.OS;
 using Android.Renderscripts;
 using RectF = Android.Graphics.RectF;
 using Android.Content.Res;
+using DebugOut = System.Diagnostics.Debug;
 
 namespace Camera.MAUI.Platforms.Android;
 
@@ -41,8 +42,6 @@ internal class MauiCameraView : GridLayout
     private CameraManager cameraManager;
     private AudioManager audioManager;
     private readonly System.Timers.Timer timer;
-    private readonly SparseIntArray ORIENTATIONS = new();
-    private readonly SparseIntArray ORIENTATIONSFRONT = new();
     private CameraCharacteristics camChars;
     private PreviewCaptureStateCallback sessionCallback;
     private byte[] capturePhoto = null;
@@ -51,9 +50,11 @@ internal class MauiCameraView : GridLayout
     private HandlerThread backgroundThread;
     private Handler backgroundHandler;
     private ImageReader imgReader;
+    private readonly CameraService _camService;
 
-
-    public MauiCameraView(Context context, CameraView cameraView) : base(context)
+    public MauiCameraView(Context context,
+                          CameraView cameraView,
+                          CameraService camService) : base(context)
     {
         this.context = context;
         this.cameraView = cameraView;
@@ -64,15 +65,8 @@ internal class MauiCameraView : GridLayout
         stateListener = new MyCameraStateCallback(this);
         photoListener = new ImageAvailableListener(this);
         AddView(textureView);
-        ORIENTATIONS.Append((int)SurfaceOrientation.Rotation0, 90);
-        ORIENTATIONS.Append((int)SurfaceOrientation.Rotation90, 0);
-        ORIENTATIONS.Append((int)SurfaceOrientation.Rotation180, 270);
-        ORIENTATIONS.Append((int)SurfaceOrientation.Rotation270, 180);
 
-        ORIENTATIONSFRONT.Append((int)SurfaceOrientation.Rotation0, 270);
-        ORIENTATIONSFRONT.Append((int)SurfaceOrientation.Rotation90, 0);
-        ORIENTATIONSFRONT.Append((int)SurfaceOrientation.Rotation180, 90);
-        ORIENTATIONSFRONT.Append((int)SurfaceOrientation.Rotation270, 180);
+        _camService = camService;
 
         InitDevices();
     }
@@ -139,12 +133,26 @@ internal class MauiCameraView : GridLayout
                 }
             }
             //Microphone = Micros.FirstOrDefault();
-            executorService = Executors.NewSingleThreadExecutor();
+            executorService = CameraExecutor;
 
+            _camService.StartAccelerometer();
+
+#if DEBUG
+            _camService.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(CameraService.DeviceOrientationAngle))
+                {
+                    CheckOrientation();
+                }
+            };
+#endif
             initiated = true;
             cameraView.RefreshDevices();
         }
     }
+
+    private IExecutorService CameraExecutor => executorService ??= 
+                                                        Executors.NewSingleThreadExecutor();
 
     internal async Task<CameraResult> StartRecordingAsync(string file, Microsoft.Maui.Graphics.Size Resolution, int frameRate, int bitRate, bool withAudio)
     {
@@ -212,34 +220,20 @@ internal class MauiCameraView : GridLayout
                             maxVideoSize = new((int)Resolution.Width, (int)Resolution.Height);
                         mediaRecorder.SetVideoSize(maxVideoSize.Width, maxVideoSize.Height);
 
-                        IWindowManager windowManager = context.GetSystemService(Context.WindowService).JavaCast<IWindowManager>();
-
-                        int rotation = (int)windowManager.DefaultDisplay.Rotation;
-                        int orientation = 0;
-
-                        // Set camera rotation based on front or back camera.
-                        if (cameraView.Camera.Position == CameraPosition.Back)
-                            orientation = ORIENTATIONS.Get(rotation);
-                        else
-                            orientation = ORIENTATIONSFRONT.Get(rotation);
-
-                        mediaRecorder.SetOrientationHint(orientation);
-
-                        Console.WriteLine($"Rotation: {rotation} Orientation: {orientation}");
-
-
+                        mediaRecorder.SetOrientationHint(CheckOrientation());
+                        _camService.StopAccelerometer(); // no need to burn battery while recording, we just got the state
                         mediaRecorder.Prepare();
 
                         if (OperatingSystem.IsAndroidVersionAtLeast(28))
-                            cameraManager.OpenCamera(cameraView.Camera.DeviceId, executorService, stateListener);
+                            cameraManager.OpenCamera(cameraView.Camera.DeviceId, CameraExecutor, stateListener);
                         else
                             cameraManager.OpenCamera(cameraView.Camera.DeviceId, stateListener, null);
                         started = true;
                     }
                     catch (Exception ex)
                     {
-                        Console.Write(ex.ToString());
-                        Console.Write(ex.StackTrace);
+                        DebugOut.Write(ex.ToString());
+                        DebugOut.Write(ex.StackTrace);
                         result = CameraResult.AccessError;
                     }
                 }
@@ -253,6 +247,30 @@ internal class MauiCameraView : GridLayout
             result = CameraResult.NotInitiated;
 
         return result;
+    }
+
+    // 0=landscape left, 90=portrait(up), 180=landscape right, 270=upside down (rear cam)
+    static readonly int[] degrees = { 0, 90, 180, 270 };
+
+    /// <summary>
+    /// We want to map the raw device orientation to the expected window orientation in case app-orientation is locked.
+    /// Uses accelerometer to determine device orientation in degrees (0 = landscape with "top"/camera-end of phone to user-left)
+    /// </summary>
+    /// <returns></returns>
+    private int CheckOrientation()
+    {
+        float angle = _camService.DeviceOrientationAngle;
+        // Map angle to nearest 0, 90, 180, 270 degrees
+        uint index = (uint)Math.Round(angle / 90.0f) % 4u;
+        int deviceOrientation = degrees[index];
+        deviceOrientation = cameraView?.Camera?.Position == CameraPosition.Front
+                            ? (360 - deviceOrientation) % 360 // adjust for front cam
+                            : deviceOrientation;
+
+        DebugOut.WriteLine($"Device orientation angle: {angle:F2}°, mapped: {deviceOrientation}°");
+
+        // Return the mapped degrees for use as orientation hint for camera when recording
+        return deviceOrientation;
     }
 
     private async void StartPreview()
@@ -286,7 +304,7 @@ internal class MauiCameraView : GridLayout
         sessionCallback = new PreviewCaptureStateCallback(this);
         if (OperatingSystem.IsAndroidVersionAtLeast(28))
         {
-            SessionConfiguration config = new((int)SessionType.Regular, surfaces, executorService, sessionCallback);
+            SessionConfiguration config = new((int)SessionType.Regular, surfaces, CameraExecutor, sessionCallback);
             cameraDevice.CreateCaptureSession(config);
         }
         else
@@ -344,15 +362,16 @@ internal class MauiCameraView : GridLayout
                         imgReader.SetOnImageAvailableListener(photoListener, backgroundHandler);
 
                         if (OperatingSystem.IsAndroidVersionAtLeast(28))
-                            cameraManager.OpenCamera(cameraView.Camera.DeviceId, executorService, stateListener);
+                            cameraManager.OpenCamera(cameraView.Camera.DeviceId, CameraExecutor, stateListener);
                         else
                             cameraManager.OpenCamera(cameraView.Camera.DeviceId, stateListener, null);
                         timer.Start();
 
                         started = true;
                     }
-                    catch
+                    catch (Exception camEx)
                     {
+                        DebugOut.WriteLine(camEx.ToString());
                         result = CameraResult.AccessError;
                     }
                 }
@@ -370,6 +389,9 @@ internal class MauiCameraView : GridLayout
     internal Task<CameraResult> StopRecordingAsync()
     {
         recording = false;
+        // restart monitoring of orientation so it is available @ next record session.
+        // probably should move internal to StartCameraAsync?
+        _camService.StartAccelerometer();
         return StartCameraAsync(cameraView.PhotosResolution);
     }
 
@@ -924,6 +946,7 @@ internal class MauiCameraView : GridLayout
         {
             cameraView.executorService?.Shutdown();
             cameraView.executorService?.Dispose();
+            cameraView.executorService = null; // so we can tell if we need a new one?
         }
 
         public override void OnDisconnected(CameraDevice camera)

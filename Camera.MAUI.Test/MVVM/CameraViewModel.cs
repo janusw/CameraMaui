@@ -10,6 +10,7 @@ using System.Windows.Markup;
 using System.Collections.Specialized;
 using Camera.MAUI.ZXingHelper;
 using CommunityToolkit.Maui.Views;
+using System.Diagnostics;
 
 namespace Camera.MAUI.Test;
 
@@ -126,6 +127,8 @@ public class CameraViewModel : INotifyPropertyChanged
     public Command StartRecording { get; set; }
     public Command StopRecording { get; set; }
 
+    public CommunityToolkit.Mvvm.Input.IAsyncRelayCommand SaveVideo { get; set; }
+
     public event PropertyChangedEventHandler PropertyChanged;
 
     protected virtual void OnPropertyChanged(string propertyName)
@@ -161,6 +164,7 @@ public class CameraViewModel : INotifyPropertyChanged
 #if IOS
         RecordingFile = Path.Combine(FileSystem.Current.CacheDirectory, "Video.mov");
 #else
+        // first thing needed is a way to save this to accessible location...?
         RecordingFile = Path.Combine(FileSystem.Current.CacheDirectory, "Video.mp4");
 #endif
         OnPropertyChanged(nameof(RecordingFile));
@@ -181,5 +185,38 @@ public class CameraViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(TakeSnapshotCmd));
         OnPropertyChanged(nameof(StartRecording));
         OnPropertyChanged(nameof(StopRecording));
+
+        SaveVideo = new CommunityToolkit.Mvvm.Input.AsyncRelayCommand(async () =>
+        {
+            await SaveToMediaDirectoryAsync(Path.GetFileName(RecordingFile), RecordingFile);
+        });
+    }
+
+
+    private async Task SaveToMediaDirectoryAsync(string filename, string srcFile)
+    {
+        string fullPath = string.Empty;
+
+#if ANDROID
+        var mediaDirMaui = Environment.GetFolderPath(Environment.SpecialFolder.MyVideos);
+        //using this for now, but Android.OS.Environment.DirectoryMovies would be better
+        var mediaDir = Android.OS.Environment.GetExternalStoragePublicDirectory(Android.OS.Environment.DirectoryPictures);
+        fullPath = Path.Combine(mediaDir.AbsolutePath, filename);
+#elif IOS || MACCATALYST
+        var mediaDir = Environment.GetFolderPath(Environment.SpecialFolder.MyVideos);
+        //var mediaDir = Path.Combine(documents, "..", "Movies"); // iOS doesn't expose a public media folder, so this is sandboxed
+        //Directory.CreateDirectory(mediaDir);
+        fullPath = Path.Combine(mediaDir, filename);
+#elif WINDOWS
+        var mediaDir = Environment.GetFolderPath(Environment.SpecialFolder.MyVideos);
+        fullPath = Path.Combine(mediaDir, filename);
+#else
+        var fallbackDir = FileSystem.AppDataDirectory; 
+        fullPath = Path.Combine(fallbackDir, filename);
+#endif
+        using var srcStream = new FileStream(srcFile, FileMode.Open, FileAccess.Read);
+
+        await CommunityToolkit.Maui.Storage.FileSaver.SaveAsync(fullPath, filename, srcStream);
+
     }
 }
