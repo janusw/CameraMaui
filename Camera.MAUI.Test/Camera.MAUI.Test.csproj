@@ -94,4 +94,18 @@
 	  </MauiXaml>
 	</ItemGroup>
 
+
+  <!-- Make sure any old temp files are removed-->
+  <Target Name="CustomDroidClean" AfterTargets="Clean" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <Message Text="Running custom clean up bin... $(ProjectDir)bin" />
+    <Exec Command="rmdir /s /q $(ProjectDir)bin" />
+    <Message Text="Running custom clean up obj... $(ProjectDir)obj" />
+    <Exec Command="rmdir /s /q $(ProjectDir)obj" />
+  </Target>
+  <Target Name="CustomDroidCleanMac" AfterTargets="Clean" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+    <Message Text="Running custom clean up bin... $(ProjectDir)bin" />
+    <Exec Command="rm -R $(ProjectDir)bin" ContinueOnError="true" />
+    <Message Text="Running custom clean up obj... $(ProjectDir)obj" />
+    <Exec Command="rm -R $(ProjectDir)obj" ContinueOnError="true" />
+  </Target>
 </Project>

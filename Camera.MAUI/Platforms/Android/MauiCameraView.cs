@@ -17,13 +17,14 @@ using Android.OS;
 using Android.Renderscripts;
 using RectF = Android.Graphics.RectF;
 using Android.Content.Res;
+using DebugOut = System.Diagnostics.Debug;
 
 namespace Camera.MAUI.Platforms.Android;
 
 internal class MauiCameraView : GridLayout
 {
     private readonly CameraView cameraView;
-    private IExecutorService executorService;
+    private IExecutorService? executorService;
     private bool started = false;
     private int frames = 0;
     private bool initiated = false;
@@ -139,12 +140,15 @@ internal class MauiCameraView : GridLayout
                 }
             }
             //Microphone = Micros.FirstOrDefault();
-            executorService = Executors.NewSingleThreadExecutor();
+            executorService = CameraExecutor;
 
             initiated = true;
             cameraView.RefreshDevices();
         }
     }
+
+    private IExecutorService CameraExecutor => executorService ??= 
+                                                Executors.NewSingleThreadExecutor();
 
     internal async Task<CameraResult> StartRecordingAsync(string file, Microsoft.Maui.Graphics.Size Resolution, int frameRate, int bitRate, bool withAudio)
     {
@@ -231,7 +235,7 @@ internal class MauiCameraView : GridLayout
                         mediaRecorder.Prepare();
 
                         if (OperatingSystem.IsAndroidVersionAtLeast(28))
-                            cameraManager.OpenCamera(cameraView.Camera.DeviceId, executorService, stateListener);
+                            cameraManager.OpenCamera(cameraView.Camera.DeviceId, CameraExecutor, stateListener);
                         else
                             cameraManager.OpenCamera(cameraView.Camera.DeviceId, stateListener, null);
                         started = true;
@@ -286,7 +290,7 @@ internal class MauiCameraView : GridLayout
         sessionCallback = new PreviewCaptureStateCallback(this);
         if (OperatingSystem.IsAndroidVersionAtLeast(28))
         {
-            SessionConfiguration config = new((int)SessionType.Regular, surfaces, executorService, sessionCallback);
+            SessionConfiguration config = new((int)SessionType.Regular, surfaces, CameraExecutor, sessionCallback);
             cameraDevice.CreateCaptureSession(config);
         }
         else
@@ -344,15 +348,16 @@ internal class MauiCameraView : GridLayout
                         imgReader.SetOnImageAvailableListener(photoListener, backgroundHandler);
 
                         if (OperatingSystem.IsAndroidVersionAtLeast(28))
-                            cameraManager.OpenCamera(cameraView.Camera.DeviceId, executorService, stateListener);
+                            cameraManager.OpenCamera(cameraView.Camera.DeviceId, CameraExecutor, stateListener);
                         else
                             cameraManager.OpenCamera(cameraView.Camera.DeviceId, stateListener, null);
                         timer.Start();
 
                         started = true;
                     }
-                    catch
+                    catch (Exception camEx)
                     {
+                        DebugOut.WriteLine(camEx.ToString());
                         result = CameraResult.AccessError;
                     }
                 }
@@ -437,10 +442,10 @@ internal class MauiCameraView : GridLayout
             Bitmap bitmap = TakeSnap();
             if (bitmap != null)
             {
-                System.Diagnostics.Debug.WriteLine($"Processing QR ({bitmap.Width}x{bitmap.Height}) " + DateTime.Now.ToString("mm:ss:fff"));
+                DebugOut.WriteLine($"Processing QR ({bitmap.Width}x{bitmap.Height}) " + DateTime.Now.ToString("mm:ss:fff"));
                 cameraView.DecodeBarcode(bitmap);
                 bitmap.Dispose();
-                System.Diagnostics.Debug.WriteLine("QR Processed " + DateTime.Now.ToString("mm:ss:fff"));
+                DebugOut.WriteLine("QR Processed " + DateTime.Now.ToString("mm:ss:fff"));
             }
             lock (cameraView.currentThreadsLocker) cameraView.currentThreads--;
         });
@@ -580,7 +585,7 @@ internal class MauiCameraView : GridLayout
             }
             catch (Java.Lang.Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine(ex.StackTrace);
+                DebugOut.WriteLine(ex.StackTrace);
             }
         }
         return stream;
@@ -924,6 +929,7 @@ internal class MauiCameraView : GridLayout
         {
             cameraView.executorService?.Shutdown();
             cameraView.executorService?.Dispose();
+            cameraView.executorService = null; // so we can tell if we need a new one?
         }
 
         public override void OnDisconnected(CameraDevice camera)
