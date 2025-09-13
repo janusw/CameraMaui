@@ -8,6 +8,9 @@ public static class AppBuilderExtensions
         {
             h.AddHandler(typeof(CameraView), typeof(CameraViewHandler));
         });
+
+        builder.Services.AddSingleton<CameraService>();
+
         return builder;
     }
 }
