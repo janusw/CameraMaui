@@ -498,6 +498,7 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
             result = false;
         return result;
     }
+
     public UIImage CropImage(UIImage originalImage)
     {
         nfloat x, y, width, height;
@@ -516,16 +517,20 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
         x = (nfloat)((originalImage.Size.Width - width) / 2.0);
         y = (nfloat)((originalImage.Size.Height - height) / 2.0);
 
-        UIGraphics.BeginImageContextWithOptions(originalImage.Size, false, 1);
-        if (cameraView.MirroredImage)
-        {
-            var context = UIGraphics.GetCurrentContext();
-            context.ScaleCTM(-1, 1);
-            context.TranslateCTM(-originalImage.Size.Width, 0);
-        }
-        originalImage.Draw(new CGPoint(0, 0));
-        UIImage croppedImage = UIImage.FromImage(UIGraphics.GetImageFromCurrentImageContext().CGImage.WithImageInRect(new CGRect(new CGPoint(x, y), new CGSize(width, height))));
-        UIGraphics.EndImageContext();
+        var renderer = new UIGraphicsImageRenderer(originalImage.Size, new UIGraphicsImageRendererFormat { Opaque = false, Scale = 1});
+
+        var image = renderer.CreateImage(imageContext => {
+            if (cameraView.MirroredImage)
+            {
+                var context = imageContext.CGContext;
+                context.ScaleCTM(-1, 1);
+                context.TranslateCTM(-originalImage.Size.Width, 0);
+            }
+            originalImage.Draw(new CGPoint(0, 0));
+        });
+
+
+        UIImage croppedImage = UIImage.FromImage(image.CGImage.WithImageInRect(new CGRect(new CGPoint(x, y), new CGSize(width, height))));
 
         return croppedImage;
     }
@@ -602,17 +607,11 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
             sampleBuffer?.Dispose();
         }
     }
-    [Export("captureOutput:didFinishProcessingPhotoSampleBuffer:previewPhotoSampleBuffer:resolvedSettings:bracketSettings:error:")]
-    void DidFinishProcessingPhoto(AVCapturePhotoOutput captureOutput, CMSampleBuffer photoSampleBuffer, CMSampleBuffer previewPhotoSampleBuffer, AVCaptureResolvedPhotoSettings resolvedSettings, AVCaptureBracketedStillImageSettings bracketSettings, NSError error)
-    {
-        if (photoSampleBuffer == null)
-        {
-            photoError = true;
-            return;
-        }
 
-        NSData imageData = AVCapturePhotoOutput.GetJpegPhotoDataRepresentation(photoSampleBuffer, previewPhotoSampleBuffer);
-        photo = new UIImage(imageData);
+    [Export("captureOutput:didFinishProcessingPhoto:error:")]
+    void didFinishProcessingPhoto(AVCapturePhotoOutput output, AVCapturePhoto capPhoto, NSError error)
+    {
+        photo = new UIImage(capPhoto.FileDataRepresentation);
         photoTaken = true;
     }
 
