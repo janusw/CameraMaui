@@ -745,7 +745,9 @@ internal class MauiCameraView : GridLayout
             int minH = (int)(m.Height() / (cameraView.Camera.MaxZoomFactor));
             int newWidth = (int)(m.Width() - (minW * destZoom));
             int newHeight = (int)(m.Height() - (minH * destZoom));
-            Rect zoomArea = new((m.Width() - newWidth) / 2, (m.Height() - newHeight) / 2, newWidth, newHeight);
+            int left = (m.Width() - newWidth) / 2;
+            int top = (m.Height() - newHeight) / 2;
+            Rect zoomArea = new(left, top, left + newWidth, top + newHeight);
             previewBuilder.Set(CaptureRequest.ScalerCropRegion, zoomArea);
             previewSession.SetRepeatingRequest(previewBuilder.Build(), null, null);
         }
