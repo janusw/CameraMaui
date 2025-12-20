@@ -44,7 +44,7 @@ jobs:
       run: dotnet build Camera.MAUI.Test/Camera.MAUI.Test.csproj -c Release -p:Version=$(git describe --tags)
 
   macBuild:
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
     - uses: actions/checkout@v4
       with:
@@ -56,7 +56,7 @@ jobs:
     - name: Setup XCode
       uses: maxim-lobanov/setup-xcode@v1
       with:
-        xcode-version: 16
+        xcode-version: '26.0'
     - name: Restore workloads & dependencies
       run: |
         dotnet workload restore
