@@ -610,8 +610,36 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
     [Export("captureOutput:didFinishProcessingPhoto:error:")]
     void DidFinishProcessingPhoto(AVCapturePhotoOutput output, AVCapturePhoto capPhoto, NSError error)
     {
-        photo = new UIImage(capPhoto.FileDataRepresentation);
-        photoTaken = true;
+        // Handle error or missing photo to avoid null reference and unblock waiting code.
+        if (error != null || capPhoto == null)
+        {
+            photo = null;
+            photoError = true;
+            photoTaken = false;
+            return;
+        }
+
+        var data = capPhoto.FileDataRepresentation;
+        if (data == null)
+        {
+            photo = null;
+            photoError = true;
+            photoTaken = false;
+            return;
+        }
+
+        try
+        {
+            photo = new UIImage(data);
+            photoError = false;
+            photoTaken = true;
+        }
+        catch
+        {
+            photo = null;
+            photoError = true;
+            photoTaken = false;
+        }
     }
 
     private void UpdateTransform()
