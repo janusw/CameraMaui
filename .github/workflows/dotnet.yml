@@ -56,7 +56,7 @@ jobs:
     - name: Setup XCode
       uses: maxim-lobanov/setup-xcode@v1
       with:
-        xcode-version: '26.0'
+        xcode-version: '26.2'
     - name: Restore workloads & dependencies
       run: |
         dotnet workload restore
