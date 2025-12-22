@@ -1,4 +1,6 @@
 ﻿#if IOS || MACCATALYST
+using System;
+using System.IO;
 using AVFoundation;
 using CoreAnimation;
 using CoreFoundation;
@@ -8,7 +10,6 @@ using CoreMedia;
 using CoreVideo;
 using Foundation;
 using MediaPlayer;
-using System.IO;
 using UIKit;
 
 namespace Camera.MAUI.Platforms.Apple;
@@ -634,8 +635,9 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
             photoError = false;
             photoTaken = true;
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine(ex.ToString());
             photo = null;
             photoError = true;
             photoTaken = false;
