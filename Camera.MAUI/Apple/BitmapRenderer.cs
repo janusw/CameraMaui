@@ -24,24 +24,22 @@ public class BitmapRenderer : IBarcodeRenderer<UIImage>
 
     public UIImage Render(BitMatrix matrix, BarcodeFormat format, string content, EncodingOptions options)
     {
-        UIGraphics.BeginImageContext(new CGSize(matrix.Width, matrix.Height));
-        var context = UIGraphics.GetCurrentContext();
+        var formatRenderer = new UIGraphicsImageRendererFormat { Scale = 1 };
+        var renderer = new UIGraphicsImageRenderer(new CGSize(matrix.Width, matrix.Height), formatRenderer);
 
-        for (int x = 0; x < matrix.Width; x++)
-        {
-            for (int y = 0; y < matrix.Height; y++)
+        var image = renderer.CreateImage(imageContext => {
+            var context = imageContext.CGContext;
+            for (int x = 0; x < matrix.Width; x++)
             {
-                context.SetFillColor(matrix[x, y] ? Foreground : Background);
-                context.FillRect(new CGRect(x, y, 1, 1));
+                for (int y = 0; y < matrix.Height; y++)
+                {
+                    context.SetFillColor(matrix[x, y] ? Foreground : Background);
+                    context.FillRect(new CGRect(x, y, 1, 1));
+                }
             }
-        }
+        });
 
-
-        var img = UIGraphics.GetImageFromCurrentImageContext();
-
-        UIGraphics.EndImageContext();
-
-        return img;
+        return image;
     }
 }
 #endif

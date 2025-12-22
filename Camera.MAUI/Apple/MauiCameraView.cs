@@ -1,4 +1,6 @@
 ﻿#if IOS || MACCATALYST
+using System;
+using System.IO;
 using AVFoundation;
 using CoreAnimation;
 using CoreFoundation;
@@ -8,7 +10,6 @@ using CoreMedia;
 using CoreVideo;
 using Foundation;
 using MediaPlayer;
-using System.IO;
 using UIKit;
 
 namespace Camera.MAUI.Platforms.Apple;
@@ -498,6 +499,7 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
             result = false;
         return result;
     }
+
     public UIImage CropImage(UIImage originalImage)
     {
         nfloat x, y, width, height;
@@ -516,16 +518,19 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
         x = (nfloat)((originalImage.Size.Width - width) / 2.0);
         y = (nfloat)((originalImage.Size.Height - height) / 2.0);
 
-        UIGraphics.BeginImageContextWithOptions(originalImage.Size, false, 1);
-        if (cameraView.MirroredImage)
-        {
-            var context = UIGraphics.GetCurrentContext();
-            context.ScaleCTM(-1, 1);
-            context.TranslateCTM(-originalImage.Size.Width, 0);
-        }
-        originalImage.Draw(new CGPoint(0, 0));
-        UIImage croppedImage = UIImage.FromImage(UIGraphics.GetImageFromCurrentImageContext().CGImage.WithImageInRect(new CGRect(new CGPoint(x, y), new CGSize(width, height))));
-        UIGraphics.EndImageContext();
+        var renderer = new UIGraphicsImageRenderer(originalImage.Size, new UIGraphicsImageRendererFormat { Opaque = false, Scale = 1});
+
+        var image = renderer.CreateImage(imageContext => {
+            if (cameraView.MirroredImage)
+            {
+                var context = imageContext.CGContext;
+                context.ScaleCTM(-1, 1);
+                context.TranslateCTM(-originalImage.Size.Width, 0);
+            }
+            originalImage.Draw(new CGPoint(0, 0));
+        });
+
+        UIImage croppedImage = UIImage.FromImage(image.CGImage.WithImageInRect(new CGRect(new CGPoint(x, y), new CGSize(width, height))));
 
         return croppedImage;
     }
@@ -602,18 +607,41 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
             sampleBuffer?.Dispose();
         }
     }
-    [Export("captureOutput:didFinishProcessingPhotoSampleBuffer:previewPhotoSampleBuffer:resolvedSettings:bracketSettings:error:")]
-    void DidFinishProcessingPhoto(AVCapturePhotoOutput captureOutput, CMSampleBuffer photoSampleBuffer, CMSampleBuffer previewPhotoSampleBuffer, AVCaptureResolvedPhotoSettings resolvedSettings, AVCaptureBracketedStillImageSettings bracketSettings, NSError error)
+
+    [Export("captureOutput:didFinishProcessingPhoto:error:")]
+    void DidFinishProcessingPhoto(AVCapturePhotoOutput output, AVCapturePhoto capPhoto, NSError error)
     {
-        if (photoSampleBuffer == null)
+        // Handle error or missing photo to avoid null reference and unblock waiting code.
+        if (error != null || capPhoto == null)
         {
+            photo = null;
             photoError = true;
+            photoTaken = false;
             return;
         }
 
-        NSData imageData = AVCapturePhotoOutput.GetJpegPhotoDataRepresentation(photoSampleBuffer, previewPhotoSampleBuffer);
-        photo = new UIImage(imageData);
-        photoTaken = true;
+        var data = capPhoto.FileDataRepresentation;
+        if (data == null)
+        {
+            photo = null;
+            photoError = true;
+            photoTaken = false;
+            return;
+        }
+
+        try
+        {
+            photo = new UIImage(data);
+            photoError = false;
+            photoTaken = true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.ToString());
+            photo = null;
+            photoError = true;
+            photoTaken = false;
+        }
     }
 
     private void UpdateTransform()
