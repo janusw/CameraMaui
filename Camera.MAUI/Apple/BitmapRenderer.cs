@@ -24,7 +24,8 @@ public class BitmapRenderer : IBarcodeRenderer<UIImage>
 
     public UIImage Render(BitMatrix matrix, BarcodeFormat format, string content, EncodingOptions options)
     {
-        var renderer = new UIGraphicsImageRenderer(new CGSize(matrix.Width, matrix.Height));
+        var formatRenderer = new UIGraphicsImageRendererFormat { Scale = 1 };
+        var renderer = new UIGraphicsImageRenderer(new CGSize(matrix.Width, matrix.Height), formatRenderer);
 
         var image = renderer.CreateImage(imageContext => {
             var context = imageContext.CGContext;
