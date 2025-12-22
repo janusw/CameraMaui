@@ -637,8 +637,7 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
         }
         catch (Exception ex)
         {
-            Console.Write(ex.ToString());
-            Console.Write(ex.StackTrace);
+            Console.WriteLine(ex.ToString());
             photo = null;
             photoError = true;
             photoTaken = false;
