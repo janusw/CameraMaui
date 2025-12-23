@@ -169,13 +169,15 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
                         {
                             // Map UIDeviceOrientation to rotation angle
                             // VideoRotationAngle uses clockwise rotation in degrees
+                            // For back camera, landscape orientations need to be inverted
                             var deviceOrientation = UIDevice.CurrentDevice.Orientation;
+                            var isBackCamera = cameraView.Camera?.Position == CameraPosition.Back;
                             movieFileOutputConnection.VideoRotationAngle = deviceOrientation switch
                             {
                                 UIDeviceOrientation.Portrait => 90,
                                 UIDeviceOrientation.PortraitUpsideDown => 270,
-                                UIDeviceOrientation.LandscapeRight => 0,
-                                UIDeviceOrientation.LandscapeLeft => 180,
+                                UIDeviceOrientation.LandscapeRight => isBackCamera ? 180 : 0,
+                                UIDeviceOrientation.LandscapeLeft => isBackCamera ? 0 : 180,
                                 _ => 90 // Default to portrait for unknown orientations
                             };
                         }
