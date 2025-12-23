@@ -162,14 +162,16 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
 #if MACCATALYST
                         if (OperatingSystem.IsMacCatalystVersionAtLeast(17))
                         {
-                            var orientation = (AVCaptureVideoOrientation)UIDevice.CurrentDevice.Orientation;
-                            movieFileOutputConnection.VideoRotationAngle = orientation switch
+                            // Map UIDeviceOrientation to rotation angle
+                            // VideoRotationAngle uses clockwise rotation in degrees
+                            var deviceOrientation = UIDevice.CurrentDevice.Orientation;
+                            movieFileOutputConnection.VideoRotationAngle = deviceOrientation switch
                             {
-                                AVCaptureVideoOrientation.Portrait => 90,
-                                AVCaptureVideoOrientation.PortraitUpsideDown => 270,
-                                AVCaptureVideoOrientation.LandscapeRight => 0,
-                                AVCaptureVideoOrientation.LandscapeLeft => 180,
-                                _ => 90 // Default to portrait
+                                UIDeviceOrientation.Portrait => 90,
+                                UIDeviceOrientation.PortraitUpsideDown => 270,
+                                UIDeviceOrientation.LandscapeRight => 0,
+                                UIDeviceOrientation.LandscapeLeft => 180,
+                                _ => 90 // Default to portrait for unknown orientations
                             };
                         }
                         else
