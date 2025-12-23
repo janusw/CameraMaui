@@ -157,10 +157,15 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
 
                         var movieFileOutputConnection = recordOutput.Connections[0];
                         
-                        // Use VideoRotationAngle on Mac Catalyst 17.0+ to avoid CA1422 warning
-                        // VideoOrientation is deprecated on Mac Catalyst 17.0 and later
-#if MACCATALYST
-                        if (OperatingSystem.IsMacCatalystVersionAtLeast(17))
+                        // Use VideoRotationAngle on iOS 17.0+ and Mac Catalyst 17.0+ to avoid CA1422 warning
+                        // VideoOrientation is deprecated on iOS 17.0 and Mac Catalyst 17.0 and later
+                        bool useVideoRotationAngle = false;
+#if IOS
+                        useVideoRotationAngle = OperatingSystem.IsIOSVersionAtLeast(17);
+#elif MACCATALYST
+                        useVideoRotationAngle = OperatingSystem.IsMacCatalystVersionAtLeast(17);
+#endif
+                        if (useVideoRotationAngle)
                         {
                             // Map UIDeviceOrientation to rotation angle
                             // VideoRotationAngle uses clockwise rotation in degrees
@@ -175,7 +180,6 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
                             };
                         }
                         else
-#endif
                         {
                             movieFileOutputConnection.VideoOrientation = (AVCaptureVideoOrientation)UIDevice.CurrentDevice.Orientation;
                         }
