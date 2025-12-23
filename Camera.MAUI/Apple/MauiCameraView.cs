@@ -156,7 +156,36 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
                         captureSession.AddOutput(recordOutput);
 
                         var movieFileOutputConnection = recordOutput.Connections[0];
-                        movieFileOutputConnection.VideoOrientation = (AVCaptureVideoOrientation)UIDevice.CurrentDevice.Orientation;
+                        
+                        // Use VideoRotationAngle on iOS 17.0+ and Mac Catalyst 17.0+ to avoid CA1422 warning
+                        // VideoOrientation is deprecated on iOS 17.0 and Mac Catalyst 17.0 and later
+                        bool useVideoRotationAngle = false;
+#if IOS
+                        useVideoRotationAngle = OperatingSystem.IsIOSVersionAtLeast(17);
+#elif MACCATALYST
+                        useVideoRotationAngle = OperatingSystem.IsMacCatalystVersionAtLeast(17);
+#endif
+                        if (useVideoRotationAngle)
+                        {
+                            // Map UIDeviceOrientation to rotation angle
+                            // VideoRotationAngle uses clockwise rotation in degrees
+                            // For back camera, landscape orientations need to be inverted
+                            var deviceOrientation = UIDevice.CurrentDevice.Orientation;
+                            var isBackCamera = cameraView.Camera?.Position == CameraPosition.Back;
+                            movieFileOutputConnection.VideoRotationAngle = deviceOrientation switch
+                            {
+                                UIDeviceOrientation.Portrait => 90,
+                                UIDeviceOrientation.PortraitUpsideDown => 270,
+                                UIDeviceOrientation.LandscapeRight => isBackCamera ? 180 : 0,
+                                UIDeviceOrientation.LandscapeLeft => isBackCamera ? 0 : 180,
+                                _ => 90 // Default to portrait for unknown orientations
+                            };
+                        }
+                        else
+                        {
+                            movieFileOutputConnection.VideoOrientation = (AVCaptureVideoOrientation)UIDevice.CurrentDevice.Orientation;
+                        }
+                        
                         captureSession.StartRunning();
 
                         //Below was causing issues on .net 8
