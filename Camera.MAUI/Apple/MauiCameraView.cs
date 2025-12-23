@@ -156,7 +156,28 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
                         captureSession.AddOutput(recordOutput);
 
                         var movieFileOutputConnection = recordOutput.Connections[0];
-                        movieFileOutputConnection.VideoOrientation = (AVCaptureVideoOrientation)UIDevice.CurrentDevice.Orientation;
+                        
+                        // Use VideoRotationAngle on Mac Catalyst 17.0+ to avoid CA1422 warning
+                        // VideoOrientation is deprecated on Mac Catalyst 17.0 and later
+#if MACCATALYST
+                        if (OperatingSystem.IsMacCatalystVersionAtLeast(17))
+                        {
+                            var orientation = (AVCaptureVideoOrientation)UIDevice.CurrentDevice.Orientation;
+                            movieFileOutputConnection.VideoRotationAngle = orientation switch
+                            {
+                                AVCaptureVideoOrientation.Portrait => 90,
+                                AVCaptureVideoOrientation.PortraitUpsideDown => 270,
+                                AVCaptureVideoOrientation.LandscapeRight => 0,
+                                AVCaptureVideoOrientation.LandscapeLeft => 180,
+                                _ => 90 // Default to portrait
+                            };
+                        }
+                        else
+#endif
+                        {
+                            movieFileOutputConnection.VideoOrientation = (AVCaptureVideoOrientation)UIDevice.CurrentDevice.Orientation;
+                        }
+                        
                         captureSession.StartRunning();
 
                         //Below was causing issues on .net 8
