@@ -680,26 +680,27 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
             transform = transform.Scale(-1, 1, 1);
 
         UIInterfaceOrientation orientation;
-        if (OperatingSystem.IsIOSVersionAtLeast(26)
-#if MACCATALYST
-            || OperatingSystem.IsMacCatalystVersionAtLeast(26)
+        
+        // Check if we should use the new EffectiveGeometry.InterfaceOrientation API
+        bool useEffectiveGeometry = false;
+#if IOS
+        useEffectiveGeometry = OperatingSystem.IsIOSVersionAtLeast(26);
+#elif MACCATALYST
+        useEffectiveGeometry = OperatingSystem.IsMacCatalystVersionAtLeast(26);
 #endif
-            )
+        
+        if (useEffectiveGeometry)
         {
             var windowScene = UIApplication.SharedApplication.ConnectedScenes.ToArray().First(s => s is UIWindowScene) as UIWindowScene;
             orientation = windowScene.EffectiveGeometry.InterfaceOrientation;
         }
         else if (OperatingSystem.IsIOSVersionAtLeast(15))
         {
-#pragma warning disable CA1422 // Validate platform compatibility - InterfaceOrientation is obsolete on iOS/MacCatalyst 26.0+, but this code only runs on earlier versions
             orientation = (UIApplication.SharedApplication.ConnectedScenes.ToArray().First(s => s is UIWindowScene) as UIWindowScene).InterfaceOrientation;
-#pragma warning restore CA1422
         }
         else if (OperatingSystem.IsIOSVersionAtLeast(13))
         {
-#pragma warning disable CA1422 // Validate platform compatibility - InterfaceOrientation is obsolete on iOS/MacCatalyst 26.0+, but this code only runs on earlier versions
             orientation = UIApplication.SharedApplication.Windows.First().WindowScene.InterfaceOrientation;
-#pragma warning restore CA1422
         }
         else
             orientation = UIApplication.SharedApplication.StatusBarOrientation;
