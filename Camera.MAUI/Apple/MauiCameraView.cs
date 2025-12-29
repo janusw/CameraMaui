@@ -684,9 +684,9 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
         {
             UIWindowScene windowScene = null;
             if (OperatingSystem.IsIOSVersionAtLeast(15))
-                windowScene = UIApplication.SharedApplication.ConnectedScenes.ToArray().First(s => s is UIWindowScene) as UIWindowScene;
+                windowScene = UIApplication.SharedApplication.ConnectedScenes.ToArray().FirstOrDefault(s => s is UIWindowScene) as UIWindowScene;
             else
-                windowScene = UIApplication.SharedApplication.Windows.First().WindowScene;
+                windowScene = UIApplication.SharedApplication.Windows.FirstOrDefault()?.WindowScene;
             
             if (windowScene != null)
             {
