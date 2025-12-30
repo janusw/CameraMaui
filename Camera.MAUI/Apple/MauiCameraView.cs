@@ -679,12 +679,24 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
         if (cameraView.MirroredImage == (cameraView.Camera?.Position == CameraPosition.Back))
             transform = transform.Scale(-1, 1, 1);
 
-        UIInterfaceOrientation orientation;
-        if (OperatingSystem.IsIOSVersionAtLeast(15))
-            orientation = (UIApplication.SharedApplication.ConnectedScenes.ToArray().First(s => s is UIWindowScene) as UIWindowScene).InterfaceOrientation;
-        else if (OperatingSystem.IsIOSVersionAtLeast(13))
-            orientation = UIApplication.SharedApplication.Windows.First().WindowScene.InterfaceOrientation;
-        else
+        UIInterfaceOrientation orientation = UIInterfaceOrientation.Unknown;
+        if (OperatingSystem.IsIOSVersionAtLeast(13))
+        {
+            UIWindowScene windowScene = null;
+            if (OperatingSystem.IsIOSVersionAtLeast(15))
+                windowScene = UIApplication.SharedApplication.ConnectedScenes.ToArray().FirstOrDefault(s => s is UIWindowScene) as UIWindowScene;
+            else
+                windowScene = UIApplication.SharedApplication.Windows.FirstOrDefault()?.WindowScene;
+            
+            if (windowScene != null)
+            {
+                if (OperatingSystem.IsIOSVersionAtLeast(26))
+                    orientation = windowScene.EffectiveGeometry.InterfaceOrientation;
+                else
+                    orientation = windowScene.InterfaceOrientation;
+            }
+        }
+        if (orientation == UIInterfaceOrientation.Unknown)
             orientation = UIApplication.SharedApplication.StatusBarOrientation;
 
         switch (orientation)
