@@ -690,10 +690,10 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
             
             if (windowScene != null)
             {
-                if (OperatingSystem.IsIOSVersionAtLeast(26))
-                    orientation = windowScene.EffectiveGeometry.InterfaceOrientation;
-                else
-                    orientation = windowScene.InterfaceOrientation;
+                // if (OperatingSystem.IsIOSVersionAtLeast(26))
+                //     orientation = windowScene.EffectiveGeometry.InterfaceOrientation;
+                // else
+                orientation = windowScene.InterfaceOrientation;
             }
         }
         if (orientation == UIInterfaceOrientation.Unknown)
