@@ -684,13 +684,19 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
         {
             UIWindowScene windowScene = null;
             if (OperatingSystem.IsIOSVersionAtLeast(15))
-                windowScene = UIApplication.SharedApplication.ConnectedScenes.ToArray().First(s => s is UIWindowScene) as UIWindowScene;
+                windowScene = UIApplication.SharedApplication.ConnectedScenes.ToArray().FirstOrDefault(s => s is UIWindowScene) as UIWindowScene;
             else
-                windowScene = UIApplication.SharedApplication.Windows.First().WindowScene;
-            if (OperatingSystem.IsIOSVersionAtLeast(26))
-                orientation = windowScene.EffectiveGeometry.InterfaceOrientation;
+                windowScene = UIApplication.SharedApplication.Windows.FirstOrDefault()?.WindowScene;
+            
+            if (windowScene != null)
+            {
+                if (OperatingSystem.IsIOSVersionAtLeast(26))
+                    orientation = windowScene.EffectiveGeometry.InterfaceOrientation;
+                else
+                    orientation = windowScene.InterfaceOrientation;
+            }
             else
-                orientation = windowScene.InterfaceOrientation;
+                orientation = UIApplication.SharedApplication.StatusBarOrientation;
         }
         else
             orientation = UIApplication.SharedApplication.StatusBarOrientation;
