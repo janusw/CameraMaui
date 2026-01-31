@@ -15,6 +15,7 @@ using SizeF = Android.Util.SizeF;
 using Android.Runtime;
 using Android.OS;
 using RectF = Android.Graphics.RectF;
+using Range = Android.Util.Range;
 using Android.Content.Res;
 using DebugOut = System.Diagnostics.Debug;
 
@@ -515,6 +516,19 @@ internal class MauiCameraView : GridLayout
 
     internal void ApplyZoom(float zoom, CaptureRequest.Builder builder)
     {
+        if (OperatingSystem.IsAndroidVersionAtLeast(30))
+        {
+            var zoomRange = (Range)camChars.Get(CameraCharacteristics.ControlZoomRatioRange);
+            if (zoomRange != null)
+            {
+                float minZoom = ((Java.Lang.Number)zoomRange.Lower).FloatValue();
+                float maxZoom = ((Java.Lang.Number)zoomRange.Upper).FloatValue();
+                float clampedZoom = Math.Clamp(zoom * minZoom, minZoom, maxZoom);
+                builder.Set(CaptureRequest.ControlZoomRatio, Java.Lang.Float.ValueOf(clampedZoom));
+                return;
+            }
+        }
+
         var destZoom = Math.Clamp(zoom, 1, Math.Min(6, cameraView.Camera.MaxZoomFactor)) - 1;
         Rect m = (Rect)camChars.Get(CameraCharacteristics.SensorInfoActiveArraySize);
         int minW = (int)(m.Width() / cameraView.Camera.MaxZoomFactor);
