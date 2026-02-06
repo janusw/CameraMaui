@@ -13,7 +13,7 @@ namespace Camera.MAUI.Test
             builder
                 .UseMauiApp<App>()
                 .UseMauiCommunityToolkit()
-                .UseMauiCommunityToolkitMediaElement()
+                .UseMauiCommunityToolkitMediaElement(isAndroidForegroundServiceEnabled: true)
                 .UseMauiCameraView()
                 .ConfigureFonts(fonts =>
                 {
