@@ -63,7 +63,7 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
-		<PackageReference Include="ZXing.Net" Version="0.16.10" />
+		<PackageReference Include="ZXing.Net" Version="0.16.11" />
 	</ItemGroup>
 
 	<ItemGroup>
