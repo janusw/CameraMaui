@@ -9,7 +9,7 @@
 		<OutputType>Exe</OutputType>
 		<RootNamespace>Camera.MAUI.Test</RootNamespace>
 		<UseMaui>true</UseMaui>
-		<MauiVersion>10.0.20</MauiVersion>
+		<MauiVersion>10.0.31</MauiVersion>
 		<SingleProject>true</SingleProject>
 		<ImplicitUsings>enable</ImplicitUsings>
 
