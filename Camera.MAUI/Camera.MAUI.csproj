@@ -39,7 +39,7 @@
 		<MauiVersion>9.0.51</MauiVersion>
 	</PropertyGroup>
 	<PropertyGroup Condition="$(TargetFramework.Contains('net10'))">
-		<MauiVersion>10.0.20</MauiVersion>
+		<MauiVersion>10.0.31</MauiVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -63,7 +63,7 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
-		<PackageReference Include="ZXing.Net" Version="0.16.10" />
+		<PackageReference Include="ZXing.Net" Version="0.16.11" />
 	</ItemGroup>
 
 	<ItemGroup>

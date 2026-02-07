@@ -1,4 +1,4 @@
-#if IOS || MACCATALYST
+﻿#if IOS || MACCATALYST
 using System;
 using System.IO;
 using AVFoundation;
@@ -78,14 +78,14 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
             {
                 AVCaptureDeviceType[] deviceTypes = null;
                 if (OperatingSystem.IsIOSVersionAtLeast(13))
-                    deviceTypes = new AVCaptureDeviceType[] { AVCaptureDeviceType.BuiltInWideAngleCamera, AVCaptureDeviceType.BuiltInUltraWideCamera, AVCaptureDeviceType.BuiltInDualWideCamera, AVCaptureDeviceType.BuiltInTripleCamera, AVCaptureDeviceType.BuiltInTelephotoCamera };
+                    deviceTypes = [AVCaptureDeviceType.BuiltInWideAngleCamera, AVCaptureDeviceType.BuiltInUltraWideCamera, AVCaptureDeviceType.BuiltInDualWideCamera, AVCaptureDeviceType.BuiltInTripleCamera, AVCaptureDeviceType.BuiltInTelephotoCamera];
                 else
-                    deviceTypes = new AVCaptureDeviceType[] { AVCaptureDeviceType.BuiltInWideAngleCamera, AVCaptureDeviceType.BuiltInTelephotoCamera };
+                    deviceTypes = [AVCaptureDeviceType.BuiltInWideAngleCamera, AVCaptureDeviceType.BuiltInTelephotoCamera];
                 var deviceDiscoverySession = AVCaptureDeviceDiscoverySession.Create(deviceTypes, AVMediaTypes.Video, AVCaptureDevicePosition.Unspecified);
                 camDevices = deviceDiscoverySession.Devices;
                 cameraView.Cameras.Clear();
 
-                Dictionary<AVCaptureDeviceType, float> deviceTypeScales = new();
+                Dictionary<AVCaptureDeviceType, float> deviceTypeScales = [];
                 float virtualDeviceScale = 1.0f;
 
                 if (OperatingSystem.IsIOSVersionAtLeast(13))
@@ -161,11 +161,11 @@ internal class MauiCameraView : UIView, IAVCaptureVideoDataOutputSampleBufferDel
                         MinZoomFactor = minZoomFactor,
                         MaxZoomFactor = maxZoomFactor,
                         HorizontalViewAngle = device.ActiveFormat.VideoFieldOfView * MathF.PI / 180,
-                        AvailableResolutions = new() { new(1920, 1080), new(1280, 720), new(640, 480), new(352, 288) }
+                        AvailableResolutions = [new(1920, 1080), new(1280, 720), new(640, 480), new(352, 288)]
                     });
                 }
                 deviceDiscoverySession.Dispose();
-                var aSession = AVCaptureDeviceDiscoverySession.Create(new AVCaptureDeviceType[] { AVCaptureDeviceType.BuiltInMicrophone }, AVMediaTypes.Audio, AVCaptureDevicePosition.Unspecified);
+                var aSession = AVCaptureDeviceDiscoverySession.Create([AVCaptureDeviceType.BuiltInMicrophone], AVMediaTypes.Audio, AVCaptureDevicePosition.Unspecified);
                 micDevices = aSession.Devices;
                 cameraView.Microphones.Clear();
                 foreach (var device in micDevices)

@@ -41,7 +41,7 @@ jobs:
         name: nupkg
         path: ./Camera.MAUI/bin/Release/*.nupkg
     - name: Build Test
-      run: dotnet build Camera.MAUI.Test/Camera.MAUI.Test.csproj -c Release -p:Version=$(git describe --tags)
+      run: dotnet build Camera.MAUI.Test/Camera.MAUI.Test.csproj -c Debug -p:Version=$(git describe --tags)
 
   macBuild:
     runs-on: macos-26
@@ -67,7 +67,7 @@ jobs:
     - name: Build Lib
       run: dotnet build Camera.MAUI/Camera.MAUI.csproj --no-restore -c Release -p:Version=$(git describe --tags)
     - name: Build Test
-      run: dotnet build Camera.MAUI.Test/Camera.MAUI.Test.csproj --no-restore -c Release -p:Version=$(git describe --tags)
+      run: dotnet build Camera.MAUI.Test/Camera.MAUI.Test.csproj --no-restore -c Debug -p:Version=$(git describe --tags)
 
   linuxBuild:
     runs-on: ubuntu-latest
@@ -89,4 +89,4 @@ jobs:
     - name: Build Lib
       run: dotnet build Camera.MAUI/Camera.MAUI.csproj --no-restore -c Release -p:Version=$(git describe --tags)
     - name: Build Test
-      run: dotnet build Camera.MAUI.Test/Camera.MAUI.Test.csproj --no-restore -c Release -p:Version=$(git describe --tags)
+      run: dotnet build Camera.MAUI.Test/Camera.MAUI.Test.csproj --no-restore -c Debug -p:Version=$(git describe --tags)
