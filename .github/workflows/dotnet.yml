@@ -16,15 +16,15 @@ jobs:
   winBuild:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v5
       with:
         dotnet-version: 10.0.x
     - name: Set up JDK 11
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
         distribution: 'temurin'
         java-version: '11'
@@ -36,7 +36,7 @@ jobs:
     - name: Build Lib
       run: dotnet build Camera.MAUI/Camera.MAUI.csproj --no-restore -c Release -p:Version=$(git describe --tags)
     - name: Upload package
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: nupkg
         path: ./Camera.MAUI/bin/Release/*.nupkg
@@ -46,11 +46,11 @@ jobs:
   macBuild:
     runs-on: macos-26
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v5
       with:
         dotnet-version: 10.0.x
     - name: Setup XCode
@@ -72,11 +72,11 @@ jobs:
   linuxBuild:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v5
       with:
         dotnet-version: 10.0.x
     - name: Restore workloads & dependencies
