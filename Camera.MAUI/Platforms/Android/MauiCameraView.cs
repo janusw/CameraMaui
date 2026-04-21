@@ -52,6 +52,7 @@ internal class MauiCameraView : GridLayout
     private HandlerThread backgroundThread;
     private Handler backgroundHandler;
     private ImageReader imgReader;
+    private int previewSessionGeneration = 0;
 
 
     public MauiCameraView(Context context, CameraView cameraView) : base(context)
@@ -272,10 +273,20 @@ internal class MauiCameraView : GridLayout
 
     private async void StartPreview()
     {
+        // Capture this invocation's generation before any await so that a subsequent
+        // StartPreview() call (triggered by rotation) increments the counter and the
+        // OnConfigured callback belonging to *this* invocation can detect it is stale.
+        int generation = System.Threading.Interlocked.Increment(ref previewSessionGeneration);
+
         while (textureView.SurfaceTexture == null)
         {
             await Task.Delay(100);
         }
+
+        // If the camera was stopped (or restarted) while we were waiting, bail out.
+        if (cameraDevice == null || generation != System.Threading.Volatile.Read(ref previewSessionGeneration))
+            return;
+
         SurfaceTexture texture = textureView.SurfaceTexture;
         texture.SetDefaultBufferSize(videoSize.Width, videoSize.Height);
 
@@ -298,7 +309,7 @@ internal class MauiCameraView : GridLayout
             previewBuilder.AddTarget(mediaRecorder.Surface);
         }
 
-        sessionCallback = new PreviewCaptureStateCallback(this);
+        sessionCallback = new PreviewCaptureStateCallback(this, generation);
         if (OperatingSystem.IsAndroidVersionAtLeast(28))
         {
             SessionConfiguration config = new((int)SessionType.Regular, surfaces, CameraExecutor, sessionCallback);
@@ -330,6 +341,12 @@ internal class MauiCameraView : GridLayout
         }
         catch (CameraAccessException e)
         {
+            e.PrintStackTrace();
+        }
+        catch (Java.Lang.IllegalStateException e)
+        {
+            // Camera device was closed before this preview could be configured
+            // (race condition during rapid stop/start cycles, e.g. on device rotation).
             e.PrintStackTrace();
         }
     }
@@ -969,12 +986,26 @@ internal class MauiCameraView : GridLayout
     private class PreviewCaptureStateCallback : CameraCaptureSession.StateCallback
     {
         private readonly MauiCameraView cameraView;
-        public PreviewCaptureStateCallback(MauiCameraView camView)
+        private readonly int generation;
+
+        public PreviewCaptureStateCallback(MauiCameraView camView, int gen)
         {
             cameraView = camView;
+            generation = gen;
         }
         public override void OnConfigured(CameraCaptureSession session)
         {
+            // Guard against stale callbacks that arrive after the camera was closed or
+            // restarted (race condition on rapid stop/start cycles during device rotation).
+            // If the camera device is gone, or a newer StartPreview() has already run,
+            // this session belongs to an old (now-closed) CameraDevice – discard it.
+            if (cameraView.cameraDevice == null ||
+                generation != System.Threading.Volatile.Read(ref cameraView.previewSessionGeneration))
+            {
+                try { session.Close(); } catch (Java.Lang.Exception ex) { DebugOut.WriteLine(ex.ToString()); }
+                return;
+            }
+
             cameraView.previewSession = session;
             cameraView.UpdatePreview();
 
