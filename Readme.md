@@ -1,11 +1,13 @@
 
-# Camera.MAUI
+# CameraMAUI
 
-A Camera View control and a Barcode Endode/Decode control (based on ZXing.Net) for .NET MAUI applications.
+A camera-view control and a barcode encode/decode control (based on ZXing.Net) for .NET MAUI applications.
+
+Note: This is a fork of the original project at https://github.com/hjam40/Camera.MAUI (born out of necessity, since the original project was badly maintained and seems to be basically dead since a while).
 
 ## CameraView
 
-A ContetView control for camera management with the next properties:
+A ContentView control for camera management with the following properties:
 
 |   | Android  | iOS/Mac  | Windows  |
 |---|---|---|---|
@@ -22,7 +24,7 @@ A ContetView control for camera management with the next properties:
 
 ### Install and configure CameraView
 
-1. Download and Install [Camera.MAUI](https://www.nuget.org/packages/Camera.MAUI) NuGet package on your application.
+1. Download and install the [CameraMAUI](https://www.nuget.org/packages/CameraMaui) NuGet package on your application.
 
 1. Initialize the plugin in your `MauiProgram.cs`:
 
@@ -183,7 +185,7 @@ The control has several binding properties for take an snapshot:
     /// </summary>
     public float AutoSnapShotSeconds
     
-    /// Sets the snaphost image format
+    /// Sets the snapshot image format
     public ImageFormat AutoSnapShotFormat
 
     /// Refreshes according to the frequency set in the AutoSnapShotSeconds property (if AutoSnapShotAsImageSource is set to true) or when GetSnapShot is called or TakeAutoSnapShot is set to true
@@ -232,10 +234,10 @@ The control has several binding properties for take an snapshot:
   AutoStartRecording="{Binding AutoStartRecording}"/>
   ```
 
-You have a complete example of MVVM in [MVVM Example](https://github.com/hjam40/Camera.MAUI/tree/master/Camera.MAUI.Test/MVVM)
+There is a complete example of MVVM in the [MVVM Example](https://github.com/janusw/CameraMaui/tree/master/Camera.MAUI.Test/MVVM)
 
 
-Enable and Handle barcodes detection:
+Enable and handle barcode detection:
 ```csharp
     cameraView.BarcodeDetected += CameraView_BarcodeDetected;
     cameraView.BarCodeOptions = new ZXingHelper.BarcodeDecodeOptions
@@ -260,13 +262,13 @@ Use the event or the bindable property BarCodeResults
 ```csharp
     /// Event launched every time a code is detected in the image if "BarCodeDetectionEnabled" is set to true.
     public event BarcodeResultHandler BarcodeDetected;
-    /// It refresh each time a barcode is detected if BarCodeDetectionEnabled porperty is true
+    /// It refresh each time a barcode is detected if BarCodeDetectionEnabled property is true
     public Result[] BarCodeResults
 ```
 
 ## BarcodeImage
 
-A ContentView control for generate codebars images. 
+A ContentView control for generating barcode images. 
 
 In XAML, make sure to add the right XML namespace:
 
@@ -280,7 +282,7 @@ Use the control and its bindable properties:
                  BarcodeBackground="White" BarcodeForeground="Blue"
                  BarcodeFormat="QR_CODE" />
 ```
-Set the barcode property to generate the image:
+Set the barcode property to the string to be encoded, in order to generate the image:
 ```csharp
-barcodeImage.Barcode = "https://github.com/hjam40/Camera.MAUI";
+barcodeImage.Barcode = "https://github.com/janusw/CameraMaui";
 ```
